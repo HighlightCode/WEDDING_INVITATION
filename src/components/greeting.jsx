@@ -55,29 +55,30 @@ const Greeting = () => {
   return (
     <Wrapper>
       <Divider style={{ marginTop: 32, marginBottom: 32 }} plain>
-        <Title data-aos="fade-up">초대합니다</Title>
+        <Title data-aos="fade-up">저 박상인, 프로포즈합니다</Title>
       </Divider>
       <Image data-aos="fade-up" src={Flower} />
       <Content data-aos="fade-up">
-        서로 마주 보며 다져온 사랑을
+        사랑은 우리의 내면적 결핍을 드러내는 순간에서 시작되지만,
+        <br />
+        바로 그 불완전함이 우리를 진정으로 연결짓는 기술이라 생각해. 
+        <br />
+        승현이 너를 처음 만났을 때, 나는 내 부족한 부분을 네가 부드럽게 채워주는 그 마법을 느꼈어.
         <br />
         <br />
-        이제 함께 한곳을 바라보며 걸어갈 수 있는
+        일상의 사소한 대화와 손길 속에서 우리의 사랑은 점점 더 풍성해졌고,
+        <br />
+        서로의 결점을 솔직히 드러내며 받아들이고, 그것을 함께 다듬어가는 과정이
+        <br />
+        지금의 자리를 만들어 줬다고 믿어.
         <br />
         <br />
-        큰 사랑으로 키우고자 합니다.
+        그래서 너와 결혼하고 싶어.
         <br />
+        네가 내 삶의 가장 든든한 버팀목이자, 영원히 함께할 짝이 되어줄 이 자리에서
         <br />
-        저희 두 사람이 사랑의 이름으로 지켜나갈 수 있게
-        <br />
-        <br />
-        앞날을 축복해 주시면 감사하겠습니다.
+        이 사랑을 평생의 서약으로 맺고 싶어.
       </Content>
-      <GroomBride data-aos="fade-up">
-        {GROOM_FATHER_NAME} · {GROOM_MOTHER_NAME}의 장남 {GROOM_NAME}
-        <br />
-        {BRIDE_FATHER_NAME} · {BRIDE_MOTHER_NAME}의 장녀 {BRIDE_NAME}
-      </GroomBride>
     </Wrapper>
   );
 };

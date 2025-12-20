@@ -54,7 +54,6 @@ const IndexPage = () => {
       <Gallery />
       <Location />
       <Quote />
-      <CongratulatoryMoney />
       <Share />
       <Footer
         style={{
@@ -64,7 +63,7 @@ const IndexPage = () => {
           textAlign: "center",
         }}
       >
-        Copyright © 2022 Shin Jooyoung
+        Copyright © 2025 Sangin Park
       </Footer>
     </Wrapper>
   );
