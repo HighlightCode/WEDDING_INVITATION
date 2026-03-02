@@ -1,0 +1,96 @@
+/* 전체 컨테이너 */
+.invitation-container {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+  font-family: 'Noto Serif KR', serif;
+  padding: 20px;
+}
+
+/* 편지 봉투 */
+.letter-envelope {
+  position: relative;
+  width: 400px;
+  min-height: 600px;
+  background-image: url('./invitation_cover.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  border-radius: 15px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  padding: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* 드래그 힌트 */
+.drag-hint {
+  position: absolute;
+  bottom: 50px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 14px;
+  color: #e91e63;
+  white-space: nowrap;
+  font-weight: 500;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  pointer-events: none;
+  z-index: 11;
+}
+
+/* 비디오 래퍼 (크로마키 처리된 리본 풀리는 애니메이션) */
+.video-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.video-canvas {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  cursor: grab;
+  pointer-events: all;
+}
+
+.video-canvas:active {
+  cursor: grabbing;
+}
+
+/* 드래그 힌트 */
+.drag-hint {
+  position: absolute;
+  bottom: 50px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 14px;
+  color: #e91e63;
+  white-space: nowrap;
+  font-weight: 500;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  pointer-events: none;
+  z-index: 11;
+}
+/* 반응형 디자인 */
+@media (max-width: 480px) {
+  .letter-envelope {
+    width: 90%;
+    min-height: 500px;
+    padding: 30px 20px;
+  }
+  
+  .drag-hint {
+    font-size: 12px;
+    bottom: 30px;
+  }
+}

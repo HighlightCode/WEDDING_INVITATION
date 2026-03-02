@@ -1,0 +1,970 @@
+/* ───────────────────────────────────────────────────
+   공통
+─────────────────────────────────────────────────── */
+.main-page {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  background: transparent; /* 히어로가 비쳐야 하므로 투명 */
+  font-family: 'NEXON', serif;
+  color: #3a3a3a;
+}
+
+.mp-section {
+  padding: 52px 28px;
+  text-align: center;
+}
+
+.section-divider {
+  width: 60px;
+  height: 0.1px;
+  background: #000000;
+  margin: 0 auto;
+}
+
+.section-divider--tall {
+  width: 60%;
+  height: 0.1px;
+  background: #000000;
+  margin: 28px auto;
+}
+
+/* ───────────────────────────────────────────────────
+   예식 안내 섹션 간격 조절
+   --ceremony-gap : 구분선 ↔ 제목 사이 간격 (위아래 동일)
+   이 값 하나만 바꾸면 됩니다.
+─────────────────────────────────────────────────── */
+.mp-section--ceremony {
+  --ceremony-gap: 220x;   /* ← 여기서 간격 조절 */
+  padding-top: var(--ceremony-gap);
+  padding-bottom: var(--ceremony-gap);
+}
+
+/* ───────────────────────────────────────────────────
+   ① 히어로
+─────────────────────────────────────────────────── */
+.hero-section {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+  width: 100%;
+  max-width: 480px;
+  height: 100svh;
+  overflow: hidden;
+  z-index: 100;
+  pointer-events: none;
+  background: #edeede; /* 이미지 로딩 전 뒷 콘텐츠 차단 – 종이색 통일 */
+}
+
+/* 콘텐츠는 히어로와 독립적으로 페이지 맨 위부터 시작 */
+.content-over-hero {
+  position: relative;
+  /* ── 종이 질감 배경 ── */
+  background-color: #edeede;               /* rgb(237, 238, 222) 종이 베이스 */
+  background-image:
+    /* ① grain: baseFrequency 낮춰 결을 굵게, numOctaves 높여 복잡도 증가, opacity 강화 */
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.60' numOctaves='6' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23p)' opacity='0.18'/%3E%3C/svg%3E"),
+    /* ② 미세 수평 섬유결 — 종이 표면의 결 방향 표현 */
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 3px,
+      rgba(120, 125, 100, 0.04) 3px,
+      rgba(120, 125, 100, 0.04) 4px
+    ),
+    /* ③ 베이스 색 기준 그라디언트로 종이 질감 강조 */
+    linear-gradient(160deg, #f3f4ea 0%, #e5e6d4 50%, #edeede 100%);
+}
+
+/* 종이 가장자리 질감 — 미세한 inset 그림자로 종이 두께감 표현 */
+.content-over-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-shadow: inset 0 0 60px rgba(100, 105, 80, 0.08);
+  z-index: 0;
+}
+.content-over-hero > * { 
+  position: relative;
+  z-index: 1;
+}
+
+.hero-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.scroll-hint {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  animation: bounce 2s ease-in-out infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50%       { transform: translateX(-50%) translateY(6px); }
+}
+
+/* ───────────────────────────────────────────────────
+   ② 장소
+─────────────────────────────────────────────────── */
+.venue-address {
+  font-family: 'NEXON';
+  font-size: 13px;
+  color: #888;
+  margin: 0;
+}
+
+/* ───────────────────────────────────────────────────
+   ②-1 인사 사진 섹션
+─────────────────────────────────────────────────── */
+.mp-section-greeting {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.mp-section-greeting > div {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+}
+
+.greeting-zone {
+  min-height: calc(100svh / 3);
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 28px;
+  box-sizing: border-box;
+}
+
+.greeting-zone--3 {
+  justify-content: flex-start;
+  padding-top: 12px;
+}
+
+.greeting-photo-wrap {
+  width: 100%;
+  max-width: 480px;
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 0 auto 28px;
+  position: relative;
+}
+
+.greeting-photo {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+
+.greeting-message-box {
+  padding: 0 8px;
+}
+
+.greeting-message {
+  font-family: 'NEXON-Bold';
+  font-size: 14px;
+  line-height: 2.1;
+  color: #9a9b82;
+  text-align: center;
+  word-break: keep-all;
+}
+
+/* ───────────────────────────────────────────────────
+   ③ 초대 인사
+─────────────────────────────────────────────────── */
+.invite-main-title-wrap {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.invite-main-title {
+  font-family: 'GrandHotel';
+  font-size: 36px;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  color: #a1af8b;
+  margin-bottom: 0;
+}
+
+/* ───────────────────────────────────────────────────
+   음악 토글 — 우측 하단 고정 스위치
+─────────────────────────────────────────────────── */
+.music-fab {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9000;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.music-toggle-switch {
+  position: relative;
+  width: 66px;
+  height: 30px;
+  border-radius: 15px;
+  border: none;
+  background: #c8c9b8;
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.3s ease;
+  flex-shrink: 0;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+}
+
+.music-toggle-switch.on {
+  background: #dfe38e;
+}
+
+.music-toggle-thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 24px;
+  height: 24px;
+  background: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  line-height: 1;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease;
+  pointer-events: none;
+  user-select: none;
+}
+
+.music-toggle-switch.on .music-toggle-thumb {
+  transform: translateX(36px);
+}
+
+.music-toggle-label-inner {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 9px;
+  font-weight: 600;
+  color: #fff;
+  font-family: sans-serif;
+  pointer-events: none;
+  user-select: none;
+  letter-spacing: 0.05em;
+}
+
+.music-toggle-switch:not(.on) .music-toggle-label-inner {
+  right: 7px;
+}
+
+.music-toggle-switch.on .music-toggle-label-inner {
+  left: 8px;
+}
+
+.invite-title {
+  font-family: 'Nexon-Bold';
+  font-size: 18px;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  color: #6b6c50;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+.family-list {
+  display: flex;
+  flex-direction: row;          /* 두 항목 가로 배치 */
+  justify-content: center;
+  gap: 40px;
+  text-align: center;
+}
+
+.family-row {
+  display: flex;
+  flex-direction: column;       /* desc 위, name 아래 */
+  align-items: center;
+  gap: 6px;
+}
+
+.family-desc {
+  font-size: 12px;
+  color: #74755a;
+}   
+
+.family-name {
+  font-family: 'Nexon-Bold';
+  font-size: 16px;
+  letter-spacing: 0.05em;
+  color: #74755a;
+  font-weight: bold;
+}
+
+.copy-toast {
+  position: fixed;
+  bottom: 48px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.72);
+  color: #fff;
+  padding: 9px 22px;
+  border-radius: 24px;
+  font-size: 13px;
+  letter-spacing: 0.05em;
+  z-index: 9999;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+/* ───────────────────────────────────────────────────
+   ④ 예식 안내 & 달력
+─────────────────────────────────────────────────── */
+.ceremony-date {
+  font-size: 15px;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+
+.ceremony-venue {
+  font-size: 15px;
+  color: #212121;
+  margin-bottom: 28px;
+}
+
+.calendar {
+  max-width: 320px;
+  margin: 0 auto;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  padding: 12px 8px;
+}
+
+.calendar-day-name {
+  text-align: center;
+  font-size: 11px;
+  color: #aaa;
+  padding: 6px 0;
+  font-family: "NEXON";
+}
+
+.calendar-cell {
+  position: relative;
+  text-align: center;
+  padding: 10px 2px;
+  font-size: 13px;
+  color: #79775d;
+  font-family: "NEXON";
+}
+
+.calendar-cell.sunday  { color: #d0c6a9; }
+.calendar-cell.saturday{ color: #aeabaf; }
+
+.calendar-cell.wedding-day::before {
+  content: '';
+  position: absolute;
+  top: calc(50%);
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 30px;
+  height: 30px;
+  background: #88aa64;
+  border-radius: 50%;
+  z-index: 0;
+}
+
+.wedding-day-number {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+  color: #fff;
+  line-height: 1;
+}
+
+/* ───────────────────────────────────────────────────
+   ⑤ 갤러리
+─────────────────────────────────────────────────── */
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+}
+
+.gallery-item {
+  cursor: pointer;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.gallery-item img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.3s;
+}
+
+.gallery-item:hover img {
+  transform: scale(1.06);
+}
+
+/* 라이트박스 */
+.lightbox-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.88);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.lightbox-img {
+  max-width: 92vw;
+  max-height: 82vh;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+  display: block;
+}
+
+.lightbox-btn {
+  position: fixed;
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  color: #fff;
+  font-size: 28px;
+  line-height: 1;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.lightbox-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.lightbox-btn--prev { left: 12px; top: 50%; transform: translateY(-50%); }
+.lightbox-btn--next { right: 12px; top: 50%; transform: translateY(-50%); }
+.lightbox-btn--close { top: 16px; right: 16px; font-size: 18px; }
+
+.lightbox-loading {
+  position: fixed;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 13px;
+  pointer-events: none;
+}
+
+/* ───────────────────────────────────────────────────
+   ⑥ 오시는 길
+─────────────────────────────────────────────────── */
+.map-wrapper {
+  margin-top: 20px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}
+
+.naver-map-iframe {
+  display: block;
+  width: 100%;
+  height: 320px;
+  border: none;
+}
+
+/* ───────────────────────────────────────────────────
+   교통 안내
+─────────────────────────────────────────────────── */
+.transport-guide {
+  margin-top: 28px;
+  text-align: left;
+}
+
+.transport-item {
+  padding: 16px 4px;
+}
+
+.transport-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.transport-icon {
+  width: 22px;
+  height: 22px;
+  color: #99a881;
+  flex-shrink: 0;
+}
+
+.transport-title {
+  font-family: 'Nexon-Bold';
+  font-size: 16px;
+  font-weight: bold;
+  color: #6b6c50;
+  letter-spacing: 0.05em;
+}
+
+.transport-content {
+  padding-left: 32px;
+}
+
+.transport-content p {
+  font-size: 13px;
+  color: #666;
+  line-height: 1.9;
+  margin: 0;
+}
+
+.transport-divider {
+  width: 100%;
+  height: 0.5px;
+  background: #ddddc8;
+}
+
+/* ───────────────────────────────────────────────────
+   ⑦ 마음 전하실 곳
+─────────────────────────────────────────────────── */
+.account-desc {
+  font-size: 13px;
+  line-height: 2;
+  color: #888;
+  margin-bottom: 24px;
+}
+
+.account-panel {
+  border: 1px solid #ede6dc;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.account-toggle {
+  width: 100%;
+  background: #faf7f3;
+  border: none;
+  padding: 14px 20px;
+  font-size: 14px;
+  letter-spacing: 0.05em;
+  color: #5a4a3a;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: 'NEXON', serif;
+}
+
+.account-toggle--groom {
+  color: #5f6044; /* 파란색 — 신랑측 */
+}
+
+.account-toggle--bride {
+  color: #5f6044; /* 분홍색 — 신부측 */
+}
+
+.account-content {
+  background: #f3f4ea; /* 종이 질감 톤 통일 */
+  overflow: hidden;
+}
+
+.account-item {
+  border-top: 1px solid #f0ebe5;
+}
+
+.account-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 10px;
+  font-size: 13px;
+}
+
+.account-row-inner {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 3px;
+}
+
+.account-label {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: #aaa;
+  text-align: left;
+  padding-left: 5px; /* ← 이 값으로 시작점 조절 */
+}
+
+.account-row-detail { 
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.account-bank {
+  color: #888;
+  min-width: 60px;
+}
+
+.account-number {
+  flex: 1;
+  letter-spacing: 0.05em;
+}
+
+.account-name {
+  color: #5a4a3a;
+  font-weight: bold;
+}
+
+.copy-btn {
+  margin-left: auto;
+  background: none;
+  border: 1px solid #d8c9b5;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 11px;
+  color: #888;
+  cursor: pointer;
+  white-space: nowrap;
+  min-width: 58px;  
+  text-align: center;
+  transition: background 0.2s, color 0.2s;
+}
+
+.copy-btn:hover {
+  background: #f8f3ee;
+  color: #5a4a3a;
+}
+
+/* ───────────────────────────────────────────────────
+   푸터
+─────────────────────────────────────────────────── */
+/* ───────────────────────────────────────────────────
+   공유 버튼
+─────────────────────────────────────────────────── */
+.share-icon-group {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  gap: 32px;
+  margin-top: 8px;
+}
+
+.share-icon-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.1s;
+}
+
+.share-icon-btn:active {
+  transform: scale(0.93);
+}
+
+.share-icon-img {
+  width: 60px;
+  height: 60px;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.share-icon-img svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.share-icon-img--link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #e8e9da;
+}
+
+.share-icon-label {
+  font-size: 12px;
+  color: #666;
+  font-family: 'NEXON', serif;
+  letter-spacing: 0.05em;
+}
+
+/* ───────────────────────────────────────────────────
+   참석 여부
+─────────────────────────────────────────────────── */
+.rsvp-desc {
+  font-size: 13px;
+  color: #888;
+  margin-bottom: 20px;
+  line-height: 1.8;
+}
+
+.rsvp-open-btn {
+  display: inline-block;
+  padding: 13px 32px;
+  background: #99a881;
+  color: #fff;
+  border: none;
+  border-radius: 24px;
+  font-size: 14px;
+  font-family: 'NEXON', serif;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.rsvp-open-btn:active {
+  transform: scale(0.97);
+}
+
+.rsvp-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9100;
+}
+
+.rsvp-modal {
+  background: #faf9f4;
+  border-radius: 20px;
+  padding: 32px 28px 28px;
+  width: min(88vw, 360px);
+  position: relative;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.18);
+}
+
+.rsvp-close-btn {
+  position: absolute;
+  top: 16px;
+  right: 18px;
+  background: none;
+  border: none;
+  font-size: 16px;
+  color: #aaa;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.rsvp-modal-title {
+  font-family: 'Nexon-Bold';
+  font-size: 17px;
+  color: #3a3a3a;
+  margin: 0 0 24px;
+  text-align: center;
+  letter-spacing: 0.05em;
+}
+
+.rsvp-side-group {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 22px;
+}
+
+.rsvp-side-btn {
+  flex: 1;
+  padding: 10px;
+  border: 1.5px solid #d8d9c4;
+  border-radius: 10px;
+  background: #fff;
+  font-size: 14px;
+  font-family: 'NEXON', serif;
+  color: #888;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.rsvp-side-btn.active {
+  border-color: #99a881;
+  background: #99a881;
+  color: #fff;
+}
+
+.rsvp-field {
+  margin-bottom: 18px;
+}
+
+.rsvp-label {
+  display: block;
+  font-size: 12px;
+  color: #aaa;
+  letter-spacing: 0.08em;
+  margin-bottom: 7px;
+}
+
+.rsvp-input {
+  width: 100%;
+  border: 1.5px solid #ddddc8;
+  border-radius: 10px;
+  padding: 11px 14px;
+  font-size: 14px;
+  font-family: 'NEXON', serif;
+  background: #fff;
+  box-sizing: border-box;
+  outline: none;
+  color: #3a3a3a;
+  transition: border-color 0.2s;
+}
+
+.rsvp-input:focus {
+  border-color: #99a881;
+}
+
+.rsvp-count-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.rsvp-input--count {
+  width: 80px;
+  text-align: center;
+}
+
+.rsvp-count-unit {
+  font-size: 14px;
+  color: #555;
+}
+
+.rsvp-submit-btn {
+  width: 100%;
+  padding: 14px;
+  background: #99a881;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-family: 'NEXON', serif;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.rsvp-submit-btn:disabled {
+  background: #c8c9b8;
+  cursor: default;
+}
+
+.rsvp-submit-btn:not(:disabled):active {
+  transform: scale(0.98);
+}
+
+.rsvp-success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  gap: 16px;
+}
+
+.rsvp-success-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #99a881;
+  color: #fff;
+  font-size: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rsvp-success-msg {
+  font-family: 'NEXON', serif;
+  font-size: 16px;
+  color: #4a4a3a;
+  letter-spacing: 0.05em;
+  text-align: center;
+}
+
+/* ───────────────────────────────────────────────────
+   하트 이펙트
+─────────────────────────────────────────────────── */
+.heart-fx-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 99999;
+}
+
+.heart-fx-particle {
+  position: fixed;
+  color: #fcffb8;
+  pointer-events: none;
+  transform: translateX(-50%);
+  animation: heartFloatUp 1.2s ease-out forwards;
+  user-select: none;
+}
+
+@keyframes heartFloatUp {
+  0%   { opacity: 1;   transform: translateX(-50%) translateY(0)     scale(1); }
+  60%  { opacity: 0.8; transform: translateX(-50%) translateY(-60px)  scale(1.1); }
+  100% { opacity: 0;   transform: translateX(-50%) translateY(-110px) scale(0.5); }
+}
+
+.main-footer {
+  text-align: center;
+  padding: 40px 28px 48px;
+  border-top: 1px solid #ede6dc;
+  margin-top: 40px;
+}
+
+.footer-logo {
+  font-size: 14px;
+  letter-spacing: 0.3em;
+  color: #bbb;
+  margin-bottom: 12px;
+}
+
+.footer-copy {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: #bbb;
+  font-family: 'NEXON-Bold', serif;
+}

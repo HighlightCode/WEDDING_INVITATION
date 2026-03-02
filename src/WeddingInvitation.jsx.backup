@@ -1,0 +1,738 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { motion } from 'framer-motion';
+import './WeddingInvitation.css';
+import ribbonVideo from './RibbonUnwrap.mp4';
+
+const WeddingInvitation = () => {
+  // 상태 관리: 편지가 열렸는지 여부
+  const [isLetterOpen, setIsLetterOpen] = useState(false);
+  // 비디오 자동 재생 중인지 여부
+  const [isAutoPlaying, setIsAutoPlaying] = useState(false);
+  
+  // 비디오 크로마키 처리를 위한 참조
+  const videoRef = useRef(null);
+  const videoCanvasRef = useRef(null);
+  const videoAnimationRef = useRef(null);
+  
+  // 드래그 관련 참조
+  const isDraggingRef = useRef(false);
+  const dragStartYRef = useRef(0);
+  const dragDistanceRef = useRef(0);
+  
+  // 비디오 크로마키 처리 및 드래그 제어
+  useEffect(() => {
+    if (!videoCanvasRef.current || !videoRef.current) return;
+    
+    const video = videoRef.current;
+    const canvas = videoCanvasRef.current;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    
+    // 비디오 로드 완료 후 실행
+    const setupVideo = () => {
+      // Canvas 크기를 비디오 크기에 맞춤
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      
+      // 비디오를 첫 프레임에 멈춤
+      video.currentTime = 0;
+    };
+    
+    // 크로마키 처리 함수
+    const processFrame = () => {
+      // 비디오 프레임을 canvas에 그리기
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      
+      // 픽셀 데이터 가져오기
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const data = imageData.data;
+      
+      // 흰색 픽셀을 투명하게 처리
+      for (let i = 0; i < data.length; i += 4) {
+        const red = data[i];
+        const green = data[i + 1];
+        const blue = data[i + 2];
+        
+        // 흰색에 가까운 픽셀 판단 (RGB 값이 모두 높을 때)
+        const brightness = (red + green + blue) / 3;
+        if (brightness > 200) {
+          // 알파값을 0으로 설정 (완전 투명)
+          data[i + 3] = 0;
+        }
+      }
+      
+      // 수정된 픽셀 데이터를 다시 canvas에 그리기
+      ctx.putImageData(imageData, 0, 0);
+      
+      // 계속 프레임 처리
+      videoAnimationRef.current = requestAnimationFrame(processFrame);
+    };
+    
+    // 드래그 이벤트 핸들러
+    const handleDragStart = (y) => {
+      if (isAutoPlaying) return;
+      isDraggingRef.current = true;
+      dragStartYRef.current = y;
+      dragDistanceRef.current = 0;
+    };
+    
+    const handleDragMove = (y) => {
+      if (!isDraggingRef.current || isAutoPlaying) return;
+      
+      // 드래그 거리 계산 (아래로 드래그: 양수)
+      const distance = y - dragStartYRef.current;
+      dragDistanceRef.current = Math.max(0, distance);
+      
+      // 드래그 거리를 비디오 시간으로 매핑
+      // 최대 200px 드래그 = 비디오 50% 지점
+      const maxDragDistance = 200;
+      const videoDuration = video.duration;
+      const triggerPoint = videoDuration * 0.5; // 50% 지점이 트리거
+      
+      const progress = Math.min(dragDistanceRef.current / maxDragDistance, 1);
+      video.currentTime = progress * triggerPoint;
+      
+      // 50% 이상 드래그하면 자동 재생 트리거
+      if (progress >= 1) {
+        setIsAutoPlaying(true);
+        video.play();
+      }
+    };
+    
+    const handleDragEnd = () => {
+      if (isAutoPlaying) return;
+      isDraggingRef.current = false;
+      
+      // 충분히 드래그하지 않았으면 비디오를 처음으로 되돌림
+      if (dragDistanceRef.current < 200) {
+        video.currentTime = 0;
+      }
+    };
+    
+    // 마우스 이벤트
+    const handleMouseDown = (e) => {
+      handleDragStart(e.clientY);
+    };
+    
+    const handleMouseMove = (e) => {
+      handleDragMove(e.clientY);
+    };
+    
+    const handleMouseUp = () => {
+      handleDragEnd();
+    };
+    
+    // 터치 이벤트
+    const handleTouchStart = (e) => {
+      e.preventDefault();
+      handleDragStart(e.touches[0].clientY);
+    };
+    
+    const handleTouchMove = (e) => {
+      e.preventDefault();
+      handleDragMove(e.touches[0].clientY);
+    };
+    
+    const handleTouchEnd = (e) => {
+      e.preventDefault();
+      handleDragEnd();
+    };
+    
+    // 비디오 종료 이벤트
+    const handleVideoEnd = () => {
+      setIsLetterOpen(true);
+    };
+    
+    // 이벤트 리스너 등록
+    canvas.addEventListener('mousedown', handleMouseDown);
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    
+    canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+    window.addEventListener('touchmove', handleTouchMove, { passive: false });
+    window.addEventListener('touchend', handleTouchEnd, { passive: false });
+    
+    video.addEventListener('ended', handleVideoEnd);
+    
+    // 비디오가 재생 가능할 때
+    if (video.readyState >= 2) {
+      setupVideo();
+      processFrame();
+    } else {
+      video.addEventListener('loadeddata', () => {
+        setupVideo();
+        processFrame();
+      });
+    }
+    
+    return () => {
+      if (videoAnimationRef.current) {
+        cancelAnimationFrame(videoAnimationRef.current);
+      }
+      canvas.removeEventListener('mousedown', handleMouseDown);
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+      
+      canvas.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', handleTouchEnd);
+      
+      video.removeEventListener('ended', handleVideoEnd);
+    };
+  }, [isAutoPlaying]);
+
+  return (
+    <div className="invitation-container">
+      {/* 편지 봉투 */}
+      <motion.div
+        className="letter-envelope"
+        initial={{ scale: 0.8, opacity: 0 }}
+        animate={{
+          scale: 1,
+          opacity: 1,
+          rotateX: isLetterOpen ? 15 : 0
+        }}
+        transition={{ duration: 0.5 }}
+      >
+        {/* 리본 풀리는 비디오 (크로마키 처리) - 항상 표시, 드래그로 제어 */}
+        {!isLetterOpen && (
+          <div className="video-wrapper">
+        this.x = x;
+        this.y = y;
+        this.oldX = x;
+        this.oldY = y;
+        this.isFixed = isFixed;
+      }
+      
+      update(deltaTime) {
+        if (this.isFixed) return;
+        
+        const vx = this.x - this.oldX;
+        const vy = this.y - this.oldY;
+        
+        this.oldX = this.x;
+        this.oldY = this.y;
+        
+        // 탄성 제거 - 움직임을 최소화
+        this.x += vx * 0.1;
+        this.y += vy * 0.1;
+        
+        // 캔버스 경계
+        if (this.y > displayHeight - 10) {
+          this.y = displayHeight - 10;
+          this.oldY = this.y;
+        }
+        if (this.x < 10) this.x = 10;
+        if (this.x > displayWidth - 10) this.x = displayWidth - 10;
+      }
+    }
+    
+    // 로프 세그먼트 클래스
+    class RopeSegment {
+      constructor(p1, p2, length) {
+        this.p1 = p1;
+        this.p2 = p2;
+        this.length = length;
+      }
+      
+      constrain() {
+        const dx = this.p2.x - this.p1.x;
+        const dy = this.p2.y - this.p1.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        const difference = this.length - distance;
+        const percent = difference / distance / 2;
+        
+        const offsetX = dx * percent;
+        const offsetY = dy * percent;
+        
+        if (!this.p1.isFixed) {
+          this.p1.x -= offsetX;
+          this.p1.y -= offsetY;
+        }
+        if (!this.p2.isFixed) {
+          this.p2.x += offsetX;
+          this.p2.y += offsetY;
+        }
+      }
+    }
+    
+    // 로프 생성
+    const centerX = displayWidth / 2;
+    const centerY = displayHeight / 2 - 100;
+    const numPointsAfterKnots = 15; // 고정점 이후의 자유로운 점 개수
+    const segmentLength = 10;
+    
+    // 리본의 고정점 위치 배열 (하나의 리본이 이 점들을 순서대로 지나감)
+    const knotPositions = [
+      { x: centerX - 100, y: centerY - 60 },  // 1번 고정점: 좌측 상단
+      { x: centerX + 100, y: centerY - 60 },  // 2번 고정점: 우측 상단
+      { x: centerX + 80, y: centerY + 40 },   // 3번 고정점: 우측 하단
+      { x: centerX - 80, y: centerY + 40 },   // 4번 고정점: 좌측 하단
+    ];
+    
+    const points = [];
+    const segments = [];
+    const ropePoints = [];
+    
+    // 고정점들을 먼저 추가 (모두 고정)
+    knotPositions.forEach(pos => {
+      const point = new Point(pos.x, pos.y, true);
+      ropePoints.push(point);
+      points.push(point);
+    });
+    
+    // 마지막 고정점 이후 자유롭게 늘어지는 부분 추가
+    const lastKnot = knotPositions[knotPositions.length - 1];
+    for (let i = 0; i < numPointsAfterKnots; i++) {
+      const x = lastKnot.x + Math.sin(i * 0.15) * 30;
+      const y = lastKnot.y + (i + 1) * segmentLength;
+      const point = new Point(x, y, false);
+      ropePoints.push(point);
+      points.push(point);
+    }
+    
+    // 세그먼트 생성 (모든 점들을 순서대로 연결)
+    for (let i = 0; i < ropePoints.length - 1; i++) {
+      segments.push(new RopeSegment(ropePoints[i], ropePoints[i + 1], segmentLength));
+    }
+    
+    // 초기 로프 길이 계산 (첫 번째 고정점부터 끝점까지)
+    const initialRopeLength = Math.sqrt(
+      Math.pow(ropePoints[0].x - ropePoints[ropePoints.length - 1].x, 2) +
+      Math.pow(ropePoints[0].y - ropePoints[ropePoints.length - 1].y, 2)
+    );
+    
+    ropeRef.current = {
+      points,
+      segments,
+      ropePoints,
+      knotPositions,
+      initialRopeLength
+    };
+    
+    let draggedPoint = null;
+    let totalDragDistance = 0;
+    let currentRopeLength = 0;
+    
+    // 마우스 이벤트
+    const handleMouseDown = (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      
+      // 리본 끝 클릭 확인
+      const endIndex = ropePoints.length - 1;
+      const endDist = Math.sqrt(
+        Math.pow(x - ropePoints[endIndex].x, 2) + 
+        Math.pow(y - ropePoints[endIndex].y, 2)
+      );
+      
+      // 리본 끝부분 100px 이내 클릭
+      if (endDist < 100) {
+        isDraggingRef.current = true;
+        draggedPoint = ropePoints[endIndex];
+      }
+    };
+    
+    const handleMouseMove = (e) => {
+      const rect = canvas.getBoundingClientRect();
+      mouseRef.current = {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      };
+      
+      // 커서 변경 (리본 끝 부분 호버 시)
+      if (!isDraggingRef.current) {
+        const endIndex = ropePoints.length - 1;
+        const endDist = Math.sqrt(
+          Math.pow(mouseRef.current.x - ropePoints[endIndex].x, 2) + 
+          Math.pow(mouseRef.current.y - ropePoints[endIndex].y, 2)
+        );
+        
+        canvas.style.cursor = endDist < 100 ? 'grab' : 'default';
+      } else {
+        canvas.style.cursor = 'grabbing';
+      }
+      
+      if (isDraggingRef.current && draggedPoint) {
+        // 드래그한 포인트를 마우스 위치로 이동
+        draggedPoint.x = mouseRef.current.x;
+        draggedPoint.y = mouseRef.current.y;
+        draggedPoint.oldX = mouseRef.current.x;
+        draggedPoint.oldY = mouseRef.current.y;
+        
+        // 현재 로프 길이 계산
+        currentRopeLength = Math.sqrt(
+          Math.pow(ropePoints[0].x - ropePoints[ropePoints.length - 1].x, 2) +
+          Math.pow(ropePoints[0].y - ropePoints[ropePoints.length - 1].y, 2)
+        );
+      }
+    };
+    
+    const handleMouseUp = () => {
+      if (isDraggingRef.current && currentRopeLength > 0) {
+        const stretchRatio = currentRopeLength / initialRopeLength;
+        
+        // 2배 이상 늘어나면 완전히 풀림
+        if (stretchRatio > 2.0) {
+          setIsRibbonUntied(true);
+          setTimeout(() => setIsLetterOpen(true), 500);
+        }
+      }
+      isDraggingRef.current = false;
+      draggedPoint = null;
+      currentRopeLength = 0;
+    };
+    
+    canvas.addEventListener('mousedown', handleMouseDown);
+    canvas.addEventListener('mousemove', handleMouseMove);
+    canvas.addEventListener('mouseup', handleMouseUp);
+    canvas.addEventListener('mouseleave', handleMouseUp);
+    
+    // 터치 이벤트 (모바일 지원)
+    const handleTouchStart = (e) => {
+      e.preventDefault();
+      const rect = canvas.getBoundingClientRect();
+      const touch = e.touches[0];
+      const x = touch.clientX - rect.left;
+      const y = touch.clientY - rect.top;
+      
+      const endIndex = ropePoints.length - 1;
+      const endDist = Math.sqrt(
+        Math.pow(x - ropePoints[endIndex].x, 2) + 
+        Math.pow(y - ropePoints[endIndex].y, 2)
+      );
+      
+      if (endDist < 100) {
+        isDraggingRef.current = true;
+        draggedPoint = ropePoints[endIndex];
+      }
+    };
+    
+    const handleTouchMove = (e) => {
+      e.preventDefault();
+      const rect = canvas.getBoundingClientRect();
+      const touch = e.touches[0];
+      mouseRef.current = {
+        x: touch.clientX - rect.left,
+        y: touch.clientY - rect.top
+      };
+      
+      if (isDraggingRef.current && draggedPoint) {
+        draggedPoint.x = mouseRef.current.x;
+        draggedPoint.y = mouseRef.current.y;
+        draggedPoint.oldX = mouseRef.current.x;
+        draggedPoint.oldY = mouseRef.current.y;
+        
+        currentRopeLength = Math.sqrt(
+          Math.pow(ropePoints[0].x - ropePoints[ropePoints.length - 1].x, 2) +
+          Math.pow(ropePoints[0].y - ropePoints[ropePoints.length - 1].y, 2)
+        );
+      }
+    };
+    
+    const handleTouchEnd = () => {
+      if (isDraggingRef.current && currentRopeLength > 0) {
+        const stretchRatio = currentRopeLength / initialRopeLength;
+        
+        if (stretchRatio > 2.0) {
+          setIsRibbonUntied(true);
+          setTimeout(() => setIsLetterOpen(true), 500);
+        }
+      }
+      isDraggingRef.current = false;
+      draggedPoint = null;
+      currentRopeLength = 0;
+    };
+    
+    canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+    canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+    canvas.addEventListener('touchend', handleTouchEnd);
+    canvas.addEventListener('touchcancel', handleTouchEnd);
+    
+    // 애니메이션 루프
+    const animate = () => {
+      ctx.clearRect(0, 0, displayWidth, displayHeight);
+      
+      // 물리 시뮬레이션 (여러 번 반복하여 정확도 향상 - 탄성 감소를 위해 반복 증가)
+      for (let iter = 0; iter < 15; iter++) {
+        segments.forEach(seg => seg.constrain());
+      }
+      
+      points.forEach(point => point.update(0.016));
+      
+      // 그림자 설정
+      ctx.shadowColor = 'rgba(233, 30, 99, 0.4)';
+      ctx.shadowBlur = 15;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 5;
+      
+      // 리본 그리기
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      
+      // 하나의 리본 줄 그리기
+      ctx.beginPath();
+      ctx.moveTo(ropePoints[0].x, ropePoints[0].y);
+      for (let i = 1; i < ropePoints.length; i++) {
+        ctx.lineTo(ropePoints[i].x, ropePoints[i].y);
+      }
+      const gradient = ctx.createLinearGradient(
+        ropePoints[0].x, ropePoints[0].y,
+        ropePoints[ropePoints.length - 1].x, ropePoints[ropePoints.length - 1].y
+      );
+      gradient.addColorStop(0, '#f06292');
+      gradient.addColorStop(0.5, '#e91e63');
+      gradient.addColorStop(1, '#c2185b');
+      ctx.strokeStyle = gradient;
+      ctx.lineWidth = 16;
+      ctx.stroke();
+      
+      // 모든 고정점에 작은 원 표시
+      knotPositions.forEach((pos, index) => {
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, 15, 0, Math.PI * 2);
+        const gradientKnot = ctx.createRadialGradient(
+          pos.x - 2, pos.y - 2, 2,
+          pos.x, pos.y, 15
+        );
+        gradientKnot.addColorStop(0, '#fce4ec');
+        gradientKnot.addColorStop(0.5, '#f06292');
+        gradientKnot.addColorStop(1, '#e91e63');
+        ctx.fillStyle = gradientKnot;
+        ctx.fill();
+        ctx.strokeStyle = '#c2185b';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        
+        // 광택
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
+        ctx.beginPath();
+        ctx.arc(pos.x - 4, pos.y - 4, 5, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+        ctx.fill();
+      });
+      
+      // 리본 끝부분 표시 (클릭/드래그 가능한 부분)
+      const time = Date.now() / 1000;
+      const pulse = Math.sin(time * 3) * 0.3 + 0.7;
+      const endIndex = ropePoints.length - 1;
+      
+      // 클릭 가능한 영역 표시 (반투명 큰 원)
+      ctx.beginPath();
+      ctx.arc(ropePoints[endIndex].x, ropePoints[endIndex].y, 40 * pulse, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(233, 30, 99, 0.15)';
+      ctx.fill();
+      
+      // 중간 원
+      ctx.beginPath();
+      ctx.arc(ropePoints[endIndex].x, ropePoints[endIndex].y, 20 * pulse, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+      ctx.fill();
+      ctx.strokeStyle = '#e91e63';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      
+      // 작은 중심 원
+      ctx.beginPath();
+      ctx.arc(ropePoints[endIndex].x, ropePoints[endIndex].y, 8, 0, Math.PI * 2);
+      ctx.fillStyle = '#e91e63';
+      ctx.fill();
+      
+      animationRef.current = requestAnimationFrame(animate);
+    };
+    
+    animate();
+    
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+      canvas.removeEventListener('mousedown', handleMouseDown);
+      canvas.removeEventListener('mousemove', handleMouseMove);
+      canvas.removeEventListener('mouseup', handleMouseUp);
+      canvas.removeEventListener('mouseleave', handleMouseUp);
+      canvas.removeEventListener('touchstart', handleTouchStart);
+      canvas.removeEventListener('touchmove', handleTouchMove);
+      canvas.removeEventListener('touchend', handleTouchEnd);
+      canvas.removeEventListener('touchcancel', handleTouchEnd);
+    };
+  }, [isRibbonUntied]);
+
+  // 비디오 크로마키 처리 (흰색 배경 제거)
+  useEffect(() => {
+    if (!isRibbonUntied || !videoCanvasRef.current || !videoRef.current) return;
+    
+    const video = videoRef.current;
+    const canvas = videoCanvasRef.current;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    
+    // 비디오 로드 완료 후 실행
+    const setupVideo = () => {
+      // Canvas 크기를 비디오 크기에 맞춤
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      
+      // 비디오 재생
+      video.play().catch(err => console.error('Video play error:', err));
+    };
+    
+    // 크로마키 처리 함수
+    const processFrame = () => {
+      if (video.paused || video.ended) {
+        return;
+      }
+      
+      // 비디오 프레임을 canvas에 그리기
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      
+      // 픽셀 데이터 가져오기
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const data = imageData.data;
+      
+      // 흰색 픽셀을 투명하게 처리
+      for (let i = 0; i < data.length; i += 4) {
+        const red = data[i];
+        const green = data[i + 1];
+        const blue = data[i + 2];
+        
+        // 흰색에 가까운 픽셀 판단 (RGB 값이 모두 높을 때)
+        // 임계값: 200 이상이면 흰색으로 간주
+        const brightness = (red + green + blue) / 3;
+        if (brightness > 200) {
+          // 알파값을 0으로 설정 (완전 투명)
+          data[i + 3] = 0;
+        }
+      }
+      
+      // 수정된 픽셀 데이터를 다시 canvas에 그리기
+      ctx.putImageData(imageData, 0, 0);
+      
+      // 다음 프레임 처리
+      videoAnimationRef.current = requestAnimationFrame(processFrame);
+    };
+    
+    // 비디오가 재생 가능할 때
+    if (video.readyState >= 2) {
+      setupVideo();
+      processFrame();
+    } else {
+      video.addEventListener('loadeddata', () => {
+        setupVideo();
+        processFrame();
+      });
+    }
+    
+    return () => {
+      if (videoAnimationRef.current) {
+        cancelAnimationFrame(videoAnimationRef.current);
+      }
+      video.pause();
+    };
+  }, [isRibbonUntied]);
+
+  return (
+    <div className="invitation-container">
+      {/* 편지 봉투 */}
+      <motion.div
+        className="letter-envelope"
+        initial={{ scale: 0.8, opacity: 0 }}
+        animate={{ 
+          scale: 1, 
+          opacity: 1,
+          rotateX: isLetterOpen ? 15 : 0
+        }}
+        transition={{ duration: 0.5 }}
+      >
+        {/* 리본 - 아직 풀리지 않았을 때만 표시 */}
+        {!isRibbonUntied && (
+          <div className="ribbon-wrapper">
+            {/* Canvas로 물리 시뮬레이션이 적용된 리본 */}
+            <canvas 
+              ref={canvasRef}
+              className="ribbon-canvas"
+            />
+            
+            {/* 드래그 힌트 텍스트 */}
+            <motion.div 
+              className="drag-hint"
+              animate={{ opacity: [0.5, 1, 0.5] }}
+              transition={{ 
+                duration: 2, 
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+            >
+              아래 리본 끝을 잡아당겨주세요
+            </motion.div>
+          </div>
+        )}
+        
+        {/* 리본 풀리는 비디오 (크로마키 처리) */}
+        {isRibbonUntied && (
+          <div className="video-wrapper">
+            {/* 숨겨진 비디오 요소 (데이터 소스로만 사용) */}
+            <video
+              ref={videoRef}
+              src={ribbonVideo}
+              style={{ display: 'none' }}
+              muted
+              playsInline
+            />
+            
+            {/* 크로마키 처리된 비디오를 표시할 Canvas */}
+            <canvas
+              ref={videoCanvasRef}
+              className="video-canvas"
+            />
+          </div>
+        )}
+
+        {/* 편지 내용 */}
+        <motion.div
+          className="letter-content"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ 
+            opacity: isLetterOpen ? 1 : 0,
+            y: isLetterOpen ? 0 : 20
+          }}
+          transition={{ 
+            duration: 0.8,
+            ease: "easeOut"
+          }}
+        >
+          <h1 className="letter-title">결혼합니다</h1>
+          
+          <div className="letter-body">
+            <p className="letter-greeting">
+              소중한 분들을 초대합니다
+            </p>
+            
+            <div className="couple-names">
+              <span className="groom-name">신랑 이름</span>
+              <span className="heart">♥</span>
+              <span className="bride-name">신부 이름</span>
+            </div>
+            
+            <div className="wedding-details">
+              <p className="date">2026년 00월 00일 토요일 오후 2시</p>
+              <p className="location">○○ 웨딩홀</p>
+              <p className="address">서울시 ○○구 ○○동 123-45</p>
+            </div>
+            
+            <div className="letter-message">
+              <p>
+                저희 두 사람이 사랑의 이름으로<br/>
+                한 가정을 이루게 되었습니다.<br/>
+                귀한 걸음 하시어<br/>
+                축복해 주시면 감사하겠습니다.
+              </p>
+            </div>
+          </div>
+        </motion.div>
+      </motion.div>
+    </div>
+  );
+};
+
+export default WeddingInvitation;
