@@ -300,7 +300,7 @@ const NaverMap = () => {
         const initMap = () => {
             if (!window.naver || !window.naver.maps || !mapRef.current) return;
 
-            const location = new window.naver.maps.LatLng(37.3595704, 127.1054221);
+            const location = new window.naver.maps.LatLng(37.4005, 127.1086);
             const map = new window.naver.maps.Map(mapRef.current, {
                 center: location,
                 zoom: 16,
@@ -550,6 +550,11 @@ const MainPage = () => {
         const btn = document.getElementById('kakao-share-btn');
         if (!btn) return;
         const handleKakaoShare = () => {
+            const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+            if (!isMobile) {
+                alert('모바일 버전만 지원됩니다.');
+                return;
+            }
             Kakao.Share.sendDefault({
                 objectType: 'feed',
                 content: {
