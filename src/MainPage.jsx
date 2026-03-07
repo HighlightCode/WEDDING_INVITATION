@@ -120,11 +120,15 @@ const PhoneModal = ({ name, onClose }) => {
 const Gallery = () => {
     const [activeIdx, setActiveIdx] = useState(null);
     const [loadedFull, setLoadedFull] = useState({});
+    const [showMore, setShowMore] = useState(false);
 
-    const thumbs = Array.from({ length: 12 }, (_, i) =>
+    const INITIAL_COUNT = 9;
+    const TOTAL_COUNT = 15;
+
+    const thumbs = Array.from({ length: TOTAL_COUNT }, (_, i) =>
         `${process.env.PUBLIC_URL}/thumbnails/Sub_Gallery_${String(i + 1).padStart(2, '0')}.jpg`
     );
-    const originals = Array.from({ length: 12 }, (_, i) =>
+    const originals = Array.from({ length: TOTAL_COUNT }, (_, i) =>
         `${process.env.PUBLIC_URL}/Sub_Gallery_${String(i + 1).padStart(2, '0')}.jpg`
     );
 
@@ -151,15 +155,39 @@ const Gallery = () => {
         return () => { document.body.style.overflow = ''; };
     }, [activeIdx]);
 
+    const extraThumbs = thumbs.slice(INITIAL_COUNT);
+
     return (
         <div className="gallery-section">
             <div className="gallery-grid">
-                {thumbs.map((src, i) => (
+                {thumbs.slice(0, INITIAL_COUNT).map((src, i) => (
                     <div key={i} className="gallery-item" onClick={() => open(i)}>
                         <img src={src} alt={`갤러리 ${i + 1}`} loading="lazy" />
                     </div>
                 ))}
+                {showMore && extraThumbs.map((src, j) => {
+                    /* 행 기준 stagger: 3열 그리드이므로 j/3 으로 행 번호 계산 */
+                    const rowDelay = Math.floor(j / 3) * 0.4;
+                    return (
+                        <motion.div
+                            key={INITIAL_COUNT + j}
+                            className="gallery-item"
+                            onClick={() => open(INITIAL_COUNT + j)}
+                            initial={{ opacity: 0, y: 40 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.8, ease: 'easeOut', delay: rowDelay }}
+                        >
+                            <img src={src} alt={`갤러리 ${INITIAL_COUNT + j + 1}`} loading="lazy" />
+                        </motion.div>
+                    );
+                })}
             </div>
+
+            {!showMore && (
+                <button className="gallery-more-btn" onClick={( ) => setShowMore(true)}>
+                    더보기
+                </button>
+            )}
 
 {createPortal(
                 <AnimatePresence>
@@ -944,7 +972,7 @@ const MainPage = () => {
 
                 {/* Footer */}
                 <footer className="main-footer">
-                    <div className="footer-logo">✦ Sangin &amp; Senghyun ✦</div>
+                    <div className="footer-logo">✦ Sangin &amp; Seunghyun ✦</div>
                     <p className="footer-copy">
                         COPYRIGHT Sangini & Seunghyuni. All rights reserved.
                     </p>

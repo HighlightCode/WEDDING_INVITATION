@@ -433,6 +433,26 @@
   transform: scale(1.06);
 }
 
+/* 더보기 버튼 */
+.gallery-more-btn {
+  display: block;
+  margin: 16px auto 0;
+  padding: 10px 36px;
+  background: transparent;
+  border: 1px solid #b0a090;
+  border-radius: 20px;
+  color: #7a6a5a;
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.gallery-more-btn:hover {
+  background: #f5ede6;
+  color: #5a4a3a;
+}
+
 /* 라이트박스 */
 .lightbox-overlay {
   position: fixed;
