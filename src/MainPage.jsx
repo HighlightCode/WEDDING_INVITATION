@@ -328,7 +328,7 @@ const NaverMap = () => {
         const initMap = () => {
             if (!window.naver || !window.naver.maps || !mapRef.current) return;
 
-            const location = new window.naver.maps.LatLng(37.4005, 127.1086);
+            const location = new window.naver.maps.LatLng(37.3995, 127.1085);
             const map = new window.naver.maps.Map(mapRef.current, {
                 center: location,
                 zoom: 16,
